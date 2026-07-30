@@ -1,0 +1,18 @@
+{
+  "--begin--": "该设备为随机生成，丢失后不能得到原先配置",
+  "product": "ICQQ-E9686",
+  "device": "994CD",
+  "board": "5117E",
+  "brand": "25BD",
+  "model": "ICQQ DF41",
+  "wifi_ssid": "HUAWEI-43ee3b0",
+  "bootloader": "U-boot",
+  "display": "IC.1522948.3005",
+  "boot_id": "6828f629-1286-f438-b73e-8e04a6da39a0",
+  "proc_version": "Linux version 5.10.101-android10-8ad65098",
+  "mac_address": "02:00:00:00:00:00",
+  "ip_address": "192.168.82.47",
+  "android_id": "37f3b22eceb81487",
+  "incremental": "2779012294",
+  "--end--": "修改后可能需要重新验证设备。"
+}
