@@ -1,4 +1,4 @@
-import { NextResponse, after } from 'next/server';
+import { NextResponse } from 'next/server';
 import * as lark from '@larksuiteoapi/node-sdk';
 
 const client = new lark.Client({
@@ -35,11 +35,9 @@ export async function POST(request: Request) {
           const host = request.headers.get('host');
           const deepseekUrl = `${protocol}://${host}/api/deepseek`;
 
-          // 在后台异步处理，Vercel 中需使用 after 保证任务不被立即中断
-          after(() => {
-            processMessageAsync(text, message.message_id, deepseekUrl).catch(err => {
-              console.error('[Feishu Webhook] Async processing error:', err);
-            });
+          // 直接 await 处理，因为目前处理速度很快（<3秒），不需要用 after 导致 Vercel 吞任务
+          await processMessageAsync(text, message.message_id, deepseekUrl).catch(err => {
+            console.error('[Feishu Webhook] Async processing error:', err);
           });
         }
       }
