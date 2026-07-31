@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { type, text, question, reportData } = body;
+    const { type, text, question, reportData, currentTasks } = body;
     const inputContent = text || question;
 
     const apiKey = process.env.DEEPSEEK_API_KEY;
