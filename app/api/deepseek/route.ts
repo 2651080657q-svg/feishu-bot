@@ -59,7 +59,7 @@ ${taskListStr}
   "targets": ["任务1", "任务2"],
   "reply": "你作为贴心、智能的AI大管家对用户说的回复"
 }
-如果用户说“今天跑完了步”、“完成了xx”，action为complete_task。
+如果用户说“今天跑完了步”、“完成了xx”、“xx已完成”、“做完了”，强制设置 action 为 complete_task，无论提及了多少个任务！
 如果用户说“今天要去拿快递”、“帮我加个杂活写邮件”，action为add_chore。
 如果用户说“不去了”、“删掉xx杂活”，action为delete_chore。
 如果用户说“记住这个灵感”、“帮我记一下：xxx”、“有个好主意：xxx”，action为record_idea，同时将灵感内容完整放到 targets 中。
@@ -70,11 +70,11 @@ ${taskListStr}
 如果用户问问题、闲聊、询问当前还有什么任务，或者让你出主意，action为chat。
 
 非常重要的规则：
-1. 如果用户的意图是修改、完成或删除任务（complete_task, delete_chore），你必须结合上面的【已有任务清单】推断任务原名放入 targets。
+1. 如果用户的意图是修改、完成或删除任务（complete_task, delete_chore），你必须极尽所能从用户的简写中推断出对应的【已有任务清单】里的原名！并将该任务的【最完整原名】放入 targets。如果用户一次性完成了多个，请将它们的原名都放入 targets 数组！绝对不能返回空数组 []，只要用户提到了完成，就必须找出最接近的任务放入 targets！
 2. 对于 record_idea / record_expense / summarize_knowledge / record_mood / set_reminder 这五类，你必须提取用户的核心内容并按照格式放到 targets 数组的第一个元素中。
-3. 如果用户的意图是查询任务，使用 action="chat"，并在 reply 中直接根据【已有任务清单】告诉他们！
-4. targets 必须是一个字符串数组。如果不涉及需要提取目标的动作，targets 为空数组 []。
-5. 请在 reply 字段中直接给出符合你管家身份的完整回答，特别是记录情绪时，要像一个温柔的朋友一样给予安抚。`;
+3. 如果用户的意图是查询任务（比如“还有哪些没完成”），使用 action="chat"，并在 reply 中直接根据【已有任务清单】告诉他们！
+4. targets 必须是一个字符串数组。
+5. 请在 reply 字段中直接给出符合你管家身份的完整回答。`;
       userPrompt = inputContent;
     } else if (type === "report") {
       const isWeekly = body.reportType === "weekly";
