@@ -99,8 +99,9 @@ async function processMessageAsync(text: string, messageId: string, deepseekUrl:
           const match = content.match(/^✅ \[任务完成\] (.*?) - /);
           if (match && match[1]) {
             const completedTaskName = match[1];
-            // 在 currentTasks 中找到它，修改它的 status 为“今日已完成”
-            const t = currentTasks.find(t => t.name === completedTaskName);
+            // 消除全角半角括号、空格的影响，进行模糊匹配
+            const normalize = (s: string) => s.replace(/[\(\)（）\s]/g, '');
+            const t = currentTasks.find(t => normalize(t.name) === normalize(completedTaskName) || normalize(t.name).includes(normalize(completedTaskName)) || normalize(completedTaskName).includes(normalize(t.name)));
             if (t) {
               t.status = "今日已完成";
             }
