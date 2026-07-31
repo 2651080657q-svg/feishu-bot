@@ -65,12 +65,8 @@ async function processMessageAsync(text: string, messageId: string, deepseekUrl:
 
     let replyText = "我没太明白你的意思，可以说得再具体一点吗？";
 
-    if (parsedData.action) {
-      if (parsedData.action === 'unsupported' || parsedData.action === 'unknown') {
-         replyText = "抱歉，目前我只能处理：添加任务、标记完成、记录日志等操作哦~";
-      } else {
-         replyText = `我已理解你的意图是：[${parsedData.action}]。由于我目前是纯本地测试代码，这部分具体执行逻辑稍后会继续完善！`;
-      }
+    if (parsedData.reply) {
+      replyText = parsedData.reply;
     }
 
     // 2. 回复用户

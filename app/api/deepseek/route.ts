@@ -47,16 +47,17 @@ export async function POST(request: Request) {
     let userPrompt = inputContent;
 
     if (type === "intent") {
-      systemPrompt = `你是一个个人任务助理中枢。用户会对你说一句话，你需要解析出他们的意图，并严格返回以下 JSON 格式：
+      systemPrompt = `你是一个个人任务助理兼AI大管家。用户会对你说一句话，你需要解析出他们的意图，并严格返回以下 JSON 格式：
 {
-  "action": "complete_task" | "add_chore" | "delete_chore" | "unknown",
-  "target": "任务/杂活名称",
-  "reply": "你对用户的一句简短回复"
+  "action": "complete_task" | "add_chore" | "delete_chore" | "chat",
+  "target": "任务/杂活名称（如果是闲聊则为空）",
+  "reply": "你作为贴心、智能的AI大管家对用户说的回复"
 }
 如果用户说“今天跑完了步”、“完成了xx”，action为complete_task。
 如果用户说“今天要去拿快递”、“帮我加个杂活写邮件”，action为add_chore。
 如果用户说“不去了”、“删掉xx杂活”，action为delete_chore。
-如果无法判断，返回 unknown。`;
+如果用户问问题、闲聊、或者让你出主意，action为chat。
+请在 reply 字段中直接给出符合你管家身份的完整回答。`;
       userPrompt = inputContent;
     } else if (type === "report") {
       const isWeekly = body.reportType === "weekly";
