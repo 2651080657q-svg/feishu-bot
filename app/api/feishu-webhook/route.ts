@@ -76,6 +76,35 @@ async function processMessageAsync(text: string, messageId: string, deepseekUrl:
       console.error("Failed to fetch bitable records before deepseek", err);
     }
 
+    // 0.5 额外拉取今日的 Logs，如果今日已经完成了某项任务，在上下文中将其标记为“已完成”
+    try {
+      const logsRes = await client.bitable.appTableRecord.list({
+        path: { app_token: bitableAppToken, table_id: bitableLogsTableId },
+        params: { page_size: 500 }
+      });
+      const todayStrStart = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }).split(' ')[0]; 
+      
+      const allLogs = logsRes.data?.items || [];
+      allLogs.forEach((item: any) => {
+        const content = item.fields.Content || '';
+        const createdAt = item.fields.CreatedAt || '';
+        if (createdAt.includes(todayStrStart)) {
+          // 如果是任务完成的日志
+          const match = content.match(/^✅ \[任务完成\] (.*?) - /);
+          if (match && match[1]) {
+            const completedTaskName = match[1];
+            // 在 currentTasks 中找到它，修改它的 status 为“今日已完成”
+            const t = currentTasks.find(t => t.name === completedTaskName);
+            if (t) {
+              t.status = "今日已完成";
+            }
+          }
+        }
+      });
+    } catch(err) {
+      console.error("Failed to fetch logs for context", err);
+    }
+
     // 1. 调用本地大模型 API 解析意图
     const res = await fetch(deepseekUrl, {
       method: 'POST',
