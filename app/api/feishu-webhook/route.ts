@@ -81,7 +81,7 @@ async function processMessageAsync(text: string, messageId: string, deepseekUrl:
              path: { app_token: BITABLE_APP_TOKEN, table_id: BITABLE_TABLE_ID },
              params: { page_size: 500 }
            });
-           const records = listRes.data.items || [];
+           const records = listRes.data?.items || [];
            const existing = records.find(r => r.fields.TaskName === target);
            
            if (existing) {
@@ -100,7 +100,7 @@ async function processMessageAsync(text: string, messageId: string, deepseekUrl:
              path: { app_token: BITABLE_APP_TOKEN, table_id: BITABLE_TABLE_ID },
              params: { page_size: 500 }
            });
-           const records = listRes.data.items || [];
+           const records = listRes.data?.items || [];
            const existing = records.find(r => r.fields.TaskName === target);
            
            if (existing) {
