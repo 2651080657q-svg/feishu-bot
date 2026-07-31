@@ -61,12 +61,55 @@ async function processMessageAsync(text: string, messageId: string, deepseekUrl:
     });
     
     const parsedData = await res.json();
-    console.log(`[Feishu Webhook] Parsed intent:`, parsedData);
+    let replyText = parsedData.reply || "我没太明白你的意思，可以说得再具体一点吗？";
 
-    let replyText = "我没太明白你的意思，可以说得再具体一点吗？";
+    const BITABLE_APP_TOKEN = 'X5xxbly88ayzz1sxPDPcJ3Eunze';
+    const BITABLE_TABLE_ID = 'tblpyoNQij8s7osz';
 
-    if (parsedData.reply) {
-      replyText = parsedData.reply;
+    if (parsedData.action && parsedData.action !== 'chat' && parsedData.action !== 'unknown') {
+      const targets = parsedData.targets || [];
+      for (const target of targets) {
+        if (!target) continue;
+        
+        if (parsedData.action === 'add_chore') {
+           await client.bitable.appTableRecord.create({
+             path: { app_token: BITABLE_APP_TOKEN, table_id: BITABLE_TABLE_ID },
+             data: { fields: { "TaskName": target, "Status": "未完成" } }
+           });
+        } else if (parsedData.action === 'complete_task') {
+           const listRes = await client.bitable.appTableRecord.list({
+             path: { app_token: BITABLE_APP_TOKEN, table_id: BITABLE_TABLE_ID },
+             params: { page_size: 500 }
+           });
+           const records = listRes.data.items || [];
+           const existing = records.find(r => r.fields.TaskName === target);
+           
+           if (existing) {
+              await client.bitable.appTableRecord.update({
+                 path: { app_token: BITABLE_APP_TOKEN, table_id: BITABLE_TABLE_ID, record_id: existing.record_id },
+                 data: { fields: { "Status": "已完成" } }
+              });
+           } else {
+              await client.bitable.appTableRecord.create({
+                 path: { app_token: BITABLE_APP_TOKEN, table_id: BITABLE_TABLE_ID },
+                 data: { fields: { "TaskName": target, "Status": "已完成" } }
+              });
+           }
+        } else if (parsedData.action === 'delete_chore') {
+           const listRes = await client.bitable.appTableRecord.list({
+             path: { app_token: BITABLE_APP_TOKEN, table_id: BITABLE_TABLE_ID },
+             params: { page_size: 500 }
+           });
+           const records = listRes.data.items || [];
+           const existing = records.find(r => r.fields.TaskName === target);
+           
+           if (existing) {
+              await client.bitable.appTableRecord.delete({
+                 path: { app_token: BITABLE_APP_TOKEN, table_id: BITABLE_TABLE_ID, record_id: existing.record_id }
+              });
+           }
+        }
+      }
     }
 
     // 2. 回复用户

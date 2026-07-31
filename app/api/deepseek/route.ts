@@ -31,7 +31,7 @@ export async function POST(request: Request) {
         
         return NextResponse.json({ 
           action: action,
-          target: inputContent,
+          targets: [inputContent],
           reply: `好的，已记录（Mock）`
         });
       } else {
@@ -50,13 +50,14 @@ export async function POST(request: Request) {
       systemPrompt = `你是一个个人任务助理兼AI大管家。用户会对你说一句话，你需要解析出他们的意图，并严格返回以下 JSON 格式：
 {
   "action": "complete_task" | "add_chore" | "delete_chore" | "chat",
-  "target": "任务/杂活名称（如果是闲聊则为空）",
+  "targets": ["任务1", "任务2"],
   "reply": "你作为贴心、智能的AI大管家对用户说的回复"
 }
 如果用户说“今天跑完了步”、“完成了xx”，action为complete_task。
 如果用户说“今天要去拿快递”、“帮我加个杂活写邮件”，action为add_chore。
 如果用户说“不去了”、“删掉xx杂活”，action为delete_chore。
 如果用户问问题、闲聊、或者让你出主意，action为chat。
+请注意，用户一句话里可能包含多个任务（例如“我完成了看小说和打游戏”），你需要将它们拆分并放入 targets 数组中（例如 ["看小说", "打游戏"]）。如果不是任务操作，targets 必须为空数组 []。
 请在 reply 字段中直接给出符合你管家身份的完整回答。`;
       userPrompt = inputContent;
     } else if (type === "report") {
