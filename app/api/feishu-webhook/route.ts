@@ -101,7 +101,17 @@ async function processMessageAsync(text: string, messageId: string, deepseekUrl:
             const completedTaskName = match[1];
             // 消除全角半角括号、空格的影响，进行模糊匹配
             const normalize = (s: string) => s.replace(/[\(\)（）\s]/g, '');
-            const t = currentTasks.find(t => normalize(t.name) === normalize(completedTaskName) || normalize(t.name).includes(normalize(completedTaskName)) || normalize(completedTaskName).includes(normalize(t.name)));
+            const isFuzzyMatch = (a: string, b: string) => {
+              const nA = normalize(a); const nB = normalize(b);
+              if (nA.includes(nB) || nB.includes(nA)) return true;
+              // 检查是否有较长的公共子串
+              let matchCount = 0;
+              for (let i = 0; i < nB.length; i++) {
+                if (nA.includes(nB[i])) matchCount++;
+              }
+              return matchCount / nB.length > 0.6 || matchCount / nA.length > 0.6;
+            };
+            const t = currentTasks.find(t => isFuzzyMatch(t.name, completedTaskName));
             if (t) {
               t.status = "今日已完成";
             }
