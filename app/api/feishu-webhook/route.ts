@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import * as lark from '@larksuiteoapi/node-sdk';
+import { waitUntil } from '@vercel/functions';
 
 const client = new lark.Client({
   appId: process.env.LARK_APP_ID || '',
@@ -38,10 +39,12 @@ export async function POST(request: Request) {
           const BITABLE_APP_TOKEN = 'X5xxbly88ayzz1sxPDPcJ3Eunze';
           const BITABLE_TABLE_ID = 'tblpyoNQij8s7osz';
 
-          // 直接 await 处理，因为目前处理速度很快（<3秒），不需要用 after 导致 Vercel 吞任务
-          await processMessageAsync(text, message.message_id, deepseekUrl, BITABLE_APP_TOKEN, BITABLE_TABLE_ID).catch(err => {
-            console.error('[Feishu Webhook] Async processing error:', err);
-          });
+          // 使用 waitUntil 让 Vercel 在后台处理，同时立即给飞书返回成功，避免超时重试导致发两遍
+          waitUntil(
+            processMessageAsync(text, message.message_id, deepseekUrl, BITABLE_APP_TOKEN, BITABLE_TABLE_ID).catch(err => {
+              console.error('[Feishu Webhook] Async processing error:', err);
+            })
+          );
         }
       }
     }

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@larksuiteoapi/node-sdk": "^1.72.0",
+    "@vercel/functions": "^3.7.6",
     "dotenv": "^17.4.2",
     "icqq": "^0.6.10",
     "next": "16.2.12",
