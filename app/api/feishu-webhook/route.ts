@@ -101,7 +101,7 @@ async function processMessageAsync(text: string, messageId: string, deepseekUrl:
            
            if (existing) {
               await client.bitable.appTableRecord.update({
-                 path: { app_token: bitableAppToken, table_id: bitableTableId, record_id: existing.record_id },
+                 path: { app_token: bitableAppToken, table_id: bitableTableId, record_id: existing.record_id! },
                  data: { fields: { "Status": "已完成" } }
               });
            } else {
@@ -120,7 +120,7 @@ async function processMessageAsync(text: string, messageId: string, deepseekUrl:
            
            if (existing) {
               await client.bitable.appTableRecord.delete({
-                 path: { app_token: bitableAppToken, table_id: bitableTableId, record_id: existing.record_id }
+                 path: { app_token: bitableAppToken, table_id: bitableTableId, record_id: existing.record_id! }
               });
            }
         }
