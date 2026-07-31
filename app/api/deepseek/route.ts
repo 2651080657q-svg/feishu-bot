@@ -55,7 +55,7 @@ ${taskListStr}
 
 用户会对你说一句话，你需要解析出他们的意图，并严格返回以下 JSON 格式：
 {
-  "action": "complete_task" | "add_chore" | "delete_chore" | "record_idea" | "chat",
+  "action": "complete_task" | "add_chore" | "delete_chore" | "record_idea" | "record_expense" | "summarize_knowledge" | "record_mood" | "set_reminder" | "chat",
   "targets": ["任务1", "任务2"],
   "reply": "你作为贴心、智能的AI大管家对用户说的回复"
 }
@@ -63,14 +63,18 @@ ${taskListStr}
 如果用户说“今天要去拿快递”、“帮我加个杂活写邮件”，action为add_chore。
 如果用户说“不去了”、“删掉xx杂活”，action为delete_chore。
 如果用户说“记住这个灵感”、“帮我记一下：xxx”、“有个好主意：xxx”，action为record_idea，同时将灵感内容完整放到 targets 中。
+如果用户说“花了XX钱”、“午饭吃海底捞200”，action为record_expense，将“分类 - 金额 - 描述”放到 targets 中（如“餐饮 - 200元 - 午饭吃海底捞”）。
+如果用户转发文章链接，或者说“帮我总结一下”，action为summarize_knowledge，将知识的总结和提炼放到 targets 中。
+如果用户说“今天好累”、“气死我了”、“心情不错”，action为record_mood，将“情绪标签 - 具体事件”放到 targets 中（如“烦躁 - 今天被领导骂了”），并在 reply 中给予高情商的安慰或互动。
+如果用户说“提醒我下周去打针”、“记住后天买花”，action为set_reminder，将“时间 - 事件”放到 targets 中（如“下周三 - 妈妈生日”）。
 如果用户问问题、闲聊、询问当前还有什么任务，或者让你出主意，action为chat。
 
 非常重要的规则：
-1. 如果用户的意图是修改、完成或删除任务（complete_task, delete_chore），你必须结合上面的【已有任务清单】来推断用户指的是哪个任务！并且在 targets 数组中必须输出该任务在清单里的【最完整原名】（绝对不能自己编名字或缩写）。如果用户提到的任务在清单中不存在，也要尽量找出最相关的，或者直接正常提取。
-2. 如果是 record_idea，直接将用户提到的点子、链接或需要随手记下的文字完整放入 targets 数组。
-3. 如果用户的意图是查询任务（比如“我还有什么任务没做”），请使用 action="chat"，并在 reply 中直接根据【已有任务清单】告诉他们！
-4. targets 必须是一个字符串数组。如果不是任务操作或记录灵感，targets 必须为空数组 []。
-5. 请在 reply 字段中直接给出符合你管家身份的完整回答。`;
+1. 如果用户的意图是修改、完成或删除任务（complete_task, delete_chore），你必须结合上面的【已有任务清单】推断任务原名放入 targets。
+2. 对于 record_idea / record_expense / summarize_knowledge / record_mood / set_reminder 这五类，你必须提取用户的核心内容并按照格式放到 targets 数组的第一个元素中。
+3. 如果用户的意图是查询任务，使用 action="chat"，并在 reply 中直接根据【已有任务清单】告诉他们！
+4. targets 必须是一个字符串数组。如果不涉及需要提取目标的动作，targets 为空数组 []。
+5. 请在 reply 字段中直接给出符合你管家身份的完整回答，特别是记录情绪时，要像一个温柔的朋友一样给予安抚。`;
       userPrompt = inputContent;
     } else if (type === "report") {
       const isWeekly = body.reportType === "weekly";
@@ -78,7 +82,7 @@ ${taskListStr}
         systemPrompt = "你是一个专业的个人成长与效率管理教练。用户将提供过去几天的【历史日报】和【执行日志】。请根据这些长期数据，生成一份结构化、有深度的【AI 周计划分析报告】。你需要总结本周的核心亮点、暴露出的结构性问题（如哪些任务频繁未完成），并给出下周的系统性调整建议。";
         userPrompt = `以下是本周执行数据：\n${JSON.stringify(reportData, null, 2)}`;
       } else {
-        systemPrompt = "你是一个专业的个人成长与效率管理教练。用户会提供今天的任务完成情况、未完成原因以及日志。请根据这些信息，生成一份结构化、富有洞察力且鼓励人心的【AI 日分析报告】。";
+        systemPrompt = "你是一个全能的个人管家和效率教练。用户会提供今天的任务清单以及所有活动的日志（包括记账💰、知识📚、情绪💖、提醒⏰和任务完成✅）。请生成一份精美、结构化的【AI 每日复盘与财务报告】。内容应包含：1. 今日任务概览 2. 财务记账小计（加总金额） 3. 情绪波动关心 4. 知识沉淀总结 5. 近期提醒（如果有）。排版要清晰美观，语气贴心。";
         userPrompt = `以下是今日执行数据：\n${JSON.stringify(reportData, null, 2)}`;
       }
     } else if (type === "interview") {

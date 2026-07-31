@@ -37,11 +37,18 @@ export async function GET(request: Request) {
     const todayStrStart = today.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }).split(' ')[0]; 
 
     let todaysLogs: string[] = [];
+    let allReminders: string[] = [];
     let userOpenId = '';
 
     allLogs.forEach((item: any) => {
       const content = item.fields.Content || '';
       const createdAt = item.fields.CreatedAt || '';
+      
+      // 收集所有历史提醒
+      if (content.includes('⏰ [提醒]')) {
+        allReminders.push(content);
+      }
+
       if (createdAt.includes(todayStrStart) || createdAt.includes(today.toISOString().split('T')[0]) || createdAt.includes(`${today.getFullYear()}/${today.getMonth()+1}/${today.getDate()}`)) {
         todaysLogs.push(content);
         // 提取 open_id: ✅ [任务完成] xxx - ou_xxxx
@@ -63,7 +70,8 @@ export async function GET(request: Request) {
     // 3. 构建发送给 DeepSeek 的数据
     const reportData = {
       tasks: currentTasks,
-      logs: todaysLogs
+      today_logs: todaysLogs,
+      active_reminders: allReminders
     };
 
     // 4. 调用 DeepSeek API 生成报告

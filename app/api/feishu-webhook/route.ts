@@ -110,6 +110,30 @@ async function processMessageAsync(text: string, messageId: string, deepseekUrl:
               path: { app_token: bitableAppToken, table_id: bitableLogsTableId },
               data: { fields: { "Content": `💡 [闪念笔记] ${target} - ${senderOpenId}`, "CreatedAt": nowStr } }
            });
+        } else if (parsedData.action === 'record_expense') {
+           const nowStr = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+           await client.bitable.appTableRecord.create({
+              path: { app_token: bitableAppToken, table_id: bitableLogsTableId },
+              data: { fields: { "Content": `💰 [记账] ${target} - ${senderOpenId}`, "CreatedAt": nowStr } }
+           });
+        } else if (parsedData.action === 'summarize_knowledge') {
+           const nowStr = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+           await client.bitable.appTableRecord.create({
+              path: { app_token: bitableAppToken, table_id: bitableLogsTableId },
+              data: { fields: { "Content": `📚 [知识] ${target} - ${senderOpenId}`, "CreatedAt": nowStr } }
+           });
+        } else if (parsedData.action === 'record_mood') {
+           const nowStr = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+           await client.bitable.appTableRecord.create({
+              path: { app_token: bitableAppToken, table_id: bitableLogsTableId },
+              data: { fields: { "Content": `💖 [情绪] ${target} - ${senderOpenId}`, "CreatedAt": nowStr } }
+           });
+        } else if (parsedData.action === 'set_reminder') {
+           const nowStr = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+           await client.bitable.appTableRecord.create({
+              path: { app_token: bitableAppToken, table_id: bitableLogsTableId },
+              data: { fields: { "Content": `⏰ [提醒] ${target} - ${senderOpenId}`, "CreatedAt": nowStr } }
+           });
         } else if (parsedData.action === 'delete_chore') {
            const listRes = await client.bitable.appTableRecord.list({
              path: { app_token: bitableAppToken, table_id: bitableTableId },
