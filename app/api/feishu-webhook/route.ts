@@ -87,8 +87,14 @@ async function processMessageAsync(text: string, messageId: string, deepseekUrl:
       const allLogs = logsRes.data?.items || [];
       allLogs.forEach((item: any) => {
         const content = item.fields.Content || '';
-        const createdAt = item.fields.CreatedAt || '';
-        if (createdAt.includes(todayStrStart)) {
+        const createdAt = item.fields.CreatedAt || 0;
+        let isToday = false;
+        if (createdAt) {
+          const logDateStr = new Date(createdAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+          if (logDateStr.startsWith(todayStrStart)) isToday = true;
+        }
+
+        if (isToday) {
           // 如果是任务完成的日志
           const match = content.match(/^✅ \[任务完成\] (.*?) - /);
           if (match && match[1]) {
@@ -127,41 +133,41 @@ async function processMessageAsync(text: string, messageId: string, deepseekUrl:
            });
         } else if (parsedData.action === 'complete_task') {
            // V2.0: 不再修改原任务的 Status，而是往 Logs 表写入完成记录
-           const nowStr = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+           const nowTs = Date.now();
            await client.bitable.appTableRecord.create({
               path: { app_token: bitableAppToken, table_id: bitableLogsTableId },
-              data: { fields: { "Content": `✅ [任务完成] ${target} - ${senderOpenId}`, "CreatedAt": nowStr } }
+              data: { fields: { "Content": `✅ [任务完成] ${target} - ${senderOpenId}`, "CreatedAt": nowTs } }
            });
         } else if (parsedData.action === 'record_idea') {
            // V2.0: 闪念笔记记录到 Logs 表
-           const nowStr = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+           const nowTs = Date.now();
            await client.bitable.appTableRecord.create({
               path: { app_token: bitableAppToken, table_id: bitableLogsTableId },
-              data: { fields: { "Content": `💡 [闪念笔记] ${target} - ${senderOpenId}`, "CreatedAt": nowStr } }
+              data: { fields: { "Content": `💡 [闪念笔记] ${target} - ${senderOpenId}`, "CreatedAt": nowTs } }
            });
         } else if (parsedData.action === 'record_expense') {
-           const nowStr = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+           const nowTs = Date.now();
            await client.bitable.appTableRecord.create({
               path: { app_token: bitableAppToken, table_id: bitableLogsTableId },
-              data: { fields: { "Content": `💰 [记账] ${target} - ${senderOpenId}`, "CreatedAt": nowStr } }
+              data: { fields: { "Content": `💰 [记账] ${target} - ${senderOpenId}`, "CreatedAt": nowTs } }
            });
         } else if (parsedData.action === 'summarize_knowledge') {
-           const nowStr = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+           const nowTs = Date.now();
            await client.bitable.appTableRecord.create({
               path: { app_token: bitableAppToken, table_id: bitableLogsTableId },
-              data: { fields: { "Content": `📚 [知识] ${target} - ${senderOpenId}`, "CreatedAt": nowStr } }
+              data: { fields: { "Content": `📚 [知识] ${target} - ${senderOpenId}`, "CreatedAt": nowTs } }
            });
         } else if (parsedData.action === 'record_mood') {
-           const nowStr = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+           const nowTs = Date.now();
            await client.bitable.appTableRecord.create({
               path: { app_token: bitableAppToken, table_id: bitableLogsTableId },
-              data: { fields: { "Content": `💖 [情绪] ${target} - ${senderOpenId}`, "CreatedAt": nowStr } }
+              data: { fields: { "Content": `💖 [情绪] ${target} - ${senderOpenId}`, "CreatedAt": nowTs } }
            });
         } else if (parsedData.action === 'set_reminder') {
-           const nowStr = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+           const nowTs = Date.now();
            await client.bitable.appTableRecord.create({
               path: { app_token: bitableAppToken, table_id: bitableLogsTableId },
-              data: { fields: { "Content": `⏰ [提醒] ${target} - ${senderOpenId}`, "CreatedAt": nowStr } }
+              data: { fields: { "Content": `⏰ [提醒] ${target} - ${senderOpenId}`, "CreatedAt": nowTs } }
            });
         } else if (parsedData.action === 'delete_chore') {
            const listRes = await client.bitable.appTableRecord.list({
