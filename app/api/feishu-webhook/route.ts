@@ -38,10 +38,12 @@ export async function POST(request: Request) {
 
           const BITABLE_APP_TOKEN = 'X5xxbly88ayzz1sxPDPcJ3Eunze';
           const BITABLE_TABLE_ID = 'tblpyoNQij8s7osz';
+          const BITABLE_LOGS_TABLE_ID = 'tblPdai5I8CYlSvf';
+          const senderOpenId = event.sender?.sender_id?.open_id || '';
 
           // 使用 waitUntil 让 Vercel 在后台处理，同时立即给飞书返回成功，避免超时重试导致发两遍
           waitUntil(
-            processMessageAsync(text, message.message_id, deepseekUrl, BITABLE_APP_TOKEN, BITABLE_TABLE_ID).catch(err => {
+            processMessageAsync(text, message.message_id, deepseekUrl, BITABLE_APP_TOKEN, BITABLE_TABLE_ID, BITABLE_LOGS_TABLE_ID, senderOpenId).catch(err => {
               console.error('[Feishu Webhook] Async processing error:', err);
             })
           );
@@ -57,7 +59,7 @@ export async function POST(request: Request) {
 }
 
 // 异步处理大模型解析和数据入库
-async function processMessageAsync(text: string, messageId: string, deepseekUrl: string, bitableAppToken: string, bitableTableId: string) {
+async function processMessageAsync(text: string, messageId: string, deepseekUrl: string, bitableAppToken: string, bitableTableId: string, bitableLogsTableId: string, senderOpenId: string) {
   try {
     // 0. 提前拉取当前任务列表，作为上下文喂给大模型
     let currentTasks: any[] = [];
@@ -95,24 +97,19 @@ async function processMessageAsync(text: string, messageId: string, deepseekUrl:
              data: { fields: { "TaskName": target, "Status": "未完成" } }
            });
         } else if (parsedData.action === 'complete_task') {
-           const listRes = await client.bitable.appTableRecord.list({
-             path: { app_token: bitableAppToken, table_id: bitableTableId },
-             params: { page_size: 500 }
+           // V2.0: 不再修改原任务的 Status，而是往 Logs 表写入完成记录
+           const nowStr = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+           await client.bitable.appTableRecord.create({
+              path: { app_token: bitableAppToken, table_id: bitableLogsTableId },
+              data: { fields: { "Content": `✅ [任务完成] ${target} - ${senderOpenId}`, "CreatedAt": nowStr } }
            });
-           const records = listRes.data?.items || [];
-           const existing = records.find(r => r.fields.TaskName === target);
-           
-           if (existing) {
-              await client.bitable.appTableRecord.update({
-                 path: { app_token: bitableAppToken, table_id: bitableTableId, record_id: existing.record_id! },
-                 data: { fields: { "Status": "已完成" } }
-              });
-           } else {
-              await client.bitable.appTableRecord.create({
-                 path: { app_token: bitableAppToken, table_id: bitableTableId },
-                 data: { fields: { "TaskName": target, "Status": "已完成" } }
-              });
-           }
+        } else if (parsedData.action === 'record_idea') {
+           // V2.0: 闪念笔记记录到 Logs 表
+           const nowStr = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+           await client.bitable.appTableRecord.create({
+              path: { app_token: bitableAppToken, table_id: bitableLogsTableId },
+              data: { fields: { "Content": `💡 [闪念笔记] ${target} - ${senderOpenId}`, "CreatedAt": nowStr } }
+           });
         } else if (parsedData.action === 'delete_chore') {
            const listRes = await client.bitable.appTableRecord.list({
              path: { app_token: bitableAppToken, table_id: bitableTableId },
@@ -129,6 +126,7 @@ async function processMessageAsync(text: string, messageId: string, deepseekUrl:
         }
       }
     }
+
 
     // 2. 回复用户
     await client.im.message.reply({
